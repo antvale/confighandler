@@ -7,6 +7,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 
+import jdk.nashorn.internal.runtime.options.Option;
+import org.apache.tinkerpop.gremlin.process.traversal.dsl.graph.GraphTraversal;
+import org.apache.tinkerpop.gremlin.structure.Edge;
 import org.apache.tinkerpop.gremlin.structure.Graph;
 import org.apache.tinkerpop.gremlin.structure.Vertex;
 
@@ -22,6 +25,7 @@ import com.datastax.dse.graph.api.DseGraph;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,6 +71,65 @@ public class DSEGraphRemoteApp {
                 .next();
     }
 
+
+
+    private static void createParameter(GraphTraversalSource g, final Vertex tpl, String name, Object value  ) {
+
+        g.V(tpl.id()).as("x")
+                .property(name, value).next();
+
+    }
+
+    public static Vertex createFeature(GraphTraversalSource g, String feature){
+
+        final Vertex vF=g.addV("feature").as("f").property("name",feature).next();
+
+        return vF;
+    }
+
+
+
+    public static void addAttribute(GraphTraversalSource g, final Vertex vF, String key, String value){
+        g.V(vF.id()).addV("attribute")
+                .property(key, value)
+                .addE("has_attribute").from("f").inV().next();
+    }
+
+
+    public static void _createSimpleGraph(GraphTraversalSource g){
+
+        g.addV("feature").as("f").property("name","service-foo")
+        .addV("attribute")
+                .property("welcome", "Hello World!")
+                .property("isBar","false")
+                .addE("has_attribute").from("f").inV().next();
+    }
+
+
+    public static void createSimpleGraph(GraphTraversalSource g, String feature){
+
+        g.addV("feature").as("f").property("name",feature)
+                .addV("attribute")
+                .property("welcome", "Hello World!")
+                .addE("has_attribute").from("f").inV()
+                .addV("attribute")
+                .property("isBar","false")
+                .addE("has_attribute").from("f").inV().next();
+    }
+
+
+    public static void createGraph4ComplexSpringConfig(GraphTraversalSource g){
+
+        g.addV("Application").as("A").property("name","service-foo")
+                .addE("label").property("branch","v1")
+                .addV("property").as("P").property("welcome-message","Hello world!")
+                                 .property("friend","bar")
+                .addE("instance").property("profile","dev").property("friend","foobar")
+                .group()
+                .next();
+    }
+
+    /*
     public static void createGraphFamily(GraphTraversalSource g){
         final Graph gh = g.getGraph();
 
@@ -84,6 +147,7 @@ public class DSEGraphRemoteApp {
         josh.addEdge("created", lop, "weight", 0.4f);
         peter.addEdge("created", lop, "weight", 0.2f);
     }
+    */
 
 
 
@@ -101,7 +165,31 @@ public class DSEGraphRemoteApp {
 
         //createGraphFamily(s.g);
 
+        //createGraph4SimpleSpringConfig(s.g);
+
+        //createSimpleGraph(s.g,"greetings");
+
+
         LOGGER.info("Number of vertexes" + s.g.V().count().next());
+
+        final Optional<Vertex> v=s.g.V().hasLabel("feature").has("name","greetings").tryNext();
+
+        if(v.isPresent() ) {
+            LOGGER.info("there is at least a property");
+            Traversal<Vertex,Map<String,List>> a=s.g.V(v.get().id()).out("has_attribute").valueMap();
+            while (a.hasNext()) {
+                Map<String, List> m = a.next();
+                if (m.size() > 0) {
+                    for(String key: m.keySet())
+                        LOGGER.info("key: " + key + " value:"+m.get(key).get(0));
+                }
+
+            }
+        }
+
+
+
+/*
 
         Traversal<Vertex, String> t1 = s.g.V().values("symbol");
 
@@ -112,12 +200,6 @@ public class DSEGraphRemoteApp {
         Traversal<Vertex, String> t2 = s.g.V().hasLabel("SimpleCurrency").values();
 
         while (t2.hasNext()) {
-            /*
-            Map<String, List> m= t2.next();
-            if (m.size()>0){
-                m.get(0)
-            }
-            */
             LOGGER.info("value: " + t2.next());
         }
 
@@ -130,5 +212,8 @@ public class DSEGraphRemoteApp {
                          LOGGER.info("key: " + key + " value:"+m.get(key).get(0));
             }
         }
+*/
+
+
     }
 }
