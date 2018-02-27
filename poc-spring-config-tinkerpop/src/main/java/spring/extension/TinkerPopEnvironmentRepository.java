@@ -5,6 +5,8 @@ import org.springframework.core.Ordered;
 import org.springframework.cloud.config.environment.Environment;
 import org.springframework.util.StringUtils;
 import org.springframework.cloud.config.environment.PropertySource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
@@ -15,6 +17,7 @@ import java.util.*;
  */
 public class TinkerPopEnvironmentRepository implements EnvironmentRepository, Ordered {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(TinkerPopEnvironmentRepository.class);
 
     private int order = Ordered.LOWEST_PRECEDENCE + 10;
 
@@ -48,9 +51,14 @@ public class TinkerPopEnvironmentRepository implements EnvironmentRepository, Or
 
         for (String app : applications) {
             for (String env : envs) {
-                Map<String, String> map = new HashMap<String, String>();
-                map.put("message", "Hello World && Ciao Pescio!");
-                environment.add(new PropertySource(app + "-" + env, map));
+                try {
+                    Map<String, String> map = SimpleDSEGraphClient.getInstance().simpleSearch(app);
+                    environment.add(new PropertySource(app + "-" + env, map));
+                } catch (Exception e){
+                    LOGGER.error("Error while processing the dse graph for app "+app,e);
+                }
+
+
             }
         }
 
@@ -63,5 +71,6 @@ public class TinkerPopEnvironmentRepository implements EnvironmentRepository, Or
     public int getOrder() {
         return order;
     }
+
 
 }
