@@ -22,11 +22,20 @@ public class ConfigClientApplication {
 @RestController
 class MessageRestController {
 
-    @Value("${message:Hello default}")
+    @Value("${welcome:Hello default}")
     private String message;
+
+    @Value("${isBar:true}")
+    private boolean isBar;
 
     @RequestMapping("/message")
     String getMessage() {
-        return this.message;
+        String result;
+
+        if (isBar)
+            result=this.message +" I'm Bar";
+        else
+            result=this.message +" I'm Foo";
+        return result;
     }
 }
