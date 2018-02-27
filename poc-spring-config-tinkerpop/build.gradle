@@ -28,8 +28,11 @@ repositories {
 }
 
 dependencies {
-    compile('org.springframework.cloud:spring-cloud-config-server')
     testCompile('org.springframework.boot:spring-boot-starter-test')
+    compile('org.springframework.cloud:spring-cloud-config-server')
+    compile('org.apache.tinkerpop:tinkergraph-gremlin:3.2.5')
+    compile('com.datastax.dse:dse-java-driver-core:1.5.1')
+    compile('com.datastax.dse:dse-java-driver-graph:1.5.1')
 }
 
 dependencyManagement {
